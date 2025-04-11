@@ -1,5 +1,44 @@
 import datetime
 
+# 内置节假日系统（2025年中国大陆法定节假日及调休）
+HOLIDAY_DATA = {
+    "year": 2025,
+    "region": "CN",
+    "dates": [
+        {"date": "2025-01-01", "type": "public_holiday"},
+        {"date": "2025-01-26", "type": "transfer_workday"},
+        {"date": "2025-01-28", "type": "public_holiday"},
+        {"date": "2025-01-29", "type": "public_holiday"},
+        {"date": "2025-01-30", "type": "public_holiday"},
+        {"date": "2025-01-31", "type": "public_holiday"},
+        {"date": "2025-02-01", "type": "public_holiday"},
+        {"date": "2025-02-02", "type": "public_holiday"},
+        {"date": "2025-02-03", "type": "public_holiday"},
+        {"date": "2025-02-08", "type": "transfer_workday"},
+        {"date": "2025-04-04", "type": "public_holiday"},
+        {"date": "2025-04-05", "type": "public_holiday"},
+        {"date": "2025-04-06", "type": "public_holiday"},
+        {"date": "2025-04-27", "type": "transfer_workday"},
+        {"date": "2025-05-01", "type": "public_holiday"},
+        {"date": "2025-05-02", "type": "public_holiday"},
+        {"date": "2025-05-03", "type": "public_holiday"},
+        {"date": "2025-05-04", "type": "public_holiday"},
+        {"date": "2025-05-05", "type": "public_holiday"},
+        {"date": "2025-05-31", "type": "public_holiday"},
+        {"date": "2025-06-01", "type": "public_holiday"},
+        {"date": "2025-06-02", "type": "public_holiday"},
+        {"date": "2025-09-28", "type": "transfer_workday"},
+        {"date": "2025-10-01", "type": "public_holiday"},
+        {"date": "2025-10-02", "type": "public_holiday"},
+        {"date": "2025-10-03", "type": "public_holiday"},
+        {"date": "2025-10-04", "type": "public_holiday"},
+        {"date": "2025-10-05", "type": "public_holiday"},
+        {"date": "2025-10-06", "type": "public_holiday"},
+        {"date": "2025-10-07", "type": "public_holiday"},
+        {"date": "2025-10-11", "type": "transfer_workday"}
+    ]
+}
+
 def check_last_workdays(date_str: str) -> tuple:
     """
     判断指定日期是否是本周/本月最后一个工作日（内置完整节假日系统）
@@ -7,45 +46,6 @@ def check_last_workdays(date_str: str) -> tuple:
     :param date_str: 日期字符串，格式"YYYY-MM-DD HH:MM:SS"
     :return: (是否本周最后一个工作日, 是否本月最后一个工作日)
     """
-    # 内置节假日系统（2025年中国大陆法定节假日及调休）
-    HOLIDAY_DATA = {
-        "year": 2025,
-        "region": "CN",
-        "dates": [
-            {"date": "2025-01-01", "type": "public_holiday"},
-            {"date": "2025-01-26", "type": "transfer_workday"},
-            {"date": "2025-01-28", "type": "public_holiday"},
-            {"date": "2025-01-29", "type": "public_holiday"},
-            {"date": "2025-01-30", "type": "public_holiday"},
-            {"date": "2025-01-31", "type": "public_holiday"},
-            {"date": "2025-02-01", "type": "public_holiday"},
-            {"date": "2025-02-02", "type": "public_holiday"},
-            {"date": "2025-02-03", "type": "public_holiday"},
-            {"date": "2025-02-08", "type": "transfer_workday"},
-            {"date": "2025-04-04", "type": "public_holiday"},
-            {"date": "2025-04-05", "type": "public_holiday"},
-            {"date": "2025-04-06", "type": "public_holiday"},
-            {"date": "2025-04-27", "type": "transfer_workday"},
-            {"date": "2025-05-01", "type": "public_holiday"},
-            {"date": "2025-05-02", "type": "public_holiday"},
-            {"date": "2025-05-03", "type": "public_holiday"},
-            {"date": "2025-05-04", "type": "public_holiday"},
-            {"date": "2025-05-05", "type": "public_holiday"},
-            {"date": "2025-05-31", "type": "public_holiday"},
-            {"date": "2025-06-01", "type": "public_holiday"},
-            {"date": "2025-06-02", "type": "public_holiday"},
-            {"date": "2025-09-28", "type": "transfer_workday"},
-            {"date": "2025-10-01", "type": "public_holiday"},
-            {"date": "2025-10-02", "type": "public_holiday"},
-            {"date": "2025-10-03", "type": "public_holiday"},
-            {"date": "2025-10-04", "type": "public_holiday"},
-            {"date": "2025-10-05", "type": "public_holiday"},
-            {"date": "2025-10-06", "type": "public_holiday"},
-            {"date": "2025-10-07", "type": "public_holiday"},
-            {"date": "2025-10-11", "type": "transfer_workday"}
-        ]
-    }
-
     try:
         # 解析输入日期
         target_date = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").date()
@@ -112,6 +112,103 @@ def check_last_workdays(date_str: str) -> tuple:
     except ValueError as e:
         raise ValueError(f"无效日期格式: {date_str} (应使用 YYYY-MM-DD HH:MM:SS)") from e
 
+def has_next_workday_in_week(date_str: str) -> bool:
+    """
+    判断指定日期之后在本周期内是否还有工作日
+    
+    :param date_str: 日期字符串，格式"YYYY-MM-DD HH:MM:SS"
+    :return: 是否还有工作日
+    """
+    try:
+        # 解析输入日期
+        target_date = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").date()
+        
+        # 构建工作日判断系统
+        holidays = set()
+        workdays = set()
+        for item in HOLIDAY_DATA["dates"]:
+            date = datetime.datetime.strptime(item["date"], "%Y-%m-%d").date()
+            if item["type"] == "public_holiday":
+                holidays.add(date)
+            elif item["type"] == "transfer_workday":
+                workdays.add(date)
+
+        def is_workday(d):
+            """智能工作日判断"""
+            # 先检查是否是调休工作日
+            if d in workdays:
+                return True
+            # 再检查是否是节假日
+            if d in holidays:
+                return False
+            # 最后判断是否是自然工作日（周一至周五）
+            return d.weekday() < 5
+
+        # 计算本周结束日期（周日）
+        week_end = target_date + datetime.timedelta(days=(6 - target_date.weekday()))
+        
+        # 从当前日期后一天开始检查
+        current = target_date + datetime.timedelta(days=1)
+        while current <= week_end:
+            if is_workday(current):
+                return True
+            current += datetime.timedelta(days=1)
+        
+        return False
+
+    except ValueError as e:
+        raise ValueError(f"无效日期格式: {date_str} (应使用 YYYY-MM-DD HH:MM:SS)") from e
+
+def has_next_workday_in_month(date_str: str) -> bool:
+    """
+    判断指定日期之后在本月内是否还有工作日
+    
+    :param date_str: 日期字符串，格式"YYYY-MM-DD HH:MM:SS"
+    :return: 是否还有工作日
+    """
+    try:
+        # 解析输入日期
+        target_date = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").date()
+        
+        # 构建工作日判断系统
+        holidays = set()
+        workdays = set()
+        for item in HOLIDAY_DATA["dates"]:
+            date = datetime.datetime.strptime(item["date"], "%Y-%m-%d").date()
+            if item["type"] == "public_holiday":
+                holidays.add(date)
+            elif item["type"] == "transfer_workday":
+                workdays.add(date)
+
+        def is_workday(d):
+            """智能工作日判断"""
+            # 先检查是否是调休工作日
+            if d in workdays:
+                return True
+            # 再检查是否是节假日
+            if d in holidays:
+                return False
+            # 最后判断是否是自然工作日（周一至周五）
+            return d.weekday() < 5
+
+        # 计算本月结束日期
+        if target_date.month == 12:
+            month_end = datetime.date(target_date.year + 1, 1, 1) - datetime.timedelta(days=1)
+        else:
+            month_end = datetime.date(target_date.year, target_date.month + 1, 1) - datetime.timedelta(days=1)
+        
+        # 从当前日期后一天开始检查
+        current = target_date + datetime.timedelta(days=1)
+        while current <= month_end:
+            if is_workday(current):
+                return True
+            current += datetime.timedelta(days=1)
+        
+        return False
+
+    except ValueError as e:
+        raise ValueError(f"无效日期格式: {date_str} (应使用 YYYY-MM-DD HH:MM:SS)") from e
+
 # 使用示例
 if __name__ == "__main__":
     test_dates = [
@@ -149,8 +246,12 @@ if __name__ == "__main__":
     for date in test_dates:
         try:
             is_last_week, is_last_month = check_last_workdays(date)
+            has_next_week = has_next_workday_in_week(date)
+            has_next_month = has_next_workday_in_month(date)
             print(f"日期 {date[:10]}：")
             print(f"  周最后工作日 → {'✔️' if is_last_week else '✖️'}")
-            print(f"  月最后工作日 → {'✔️' if is_last_month else '✖️'}\n")
+            print(f"  月最后工作日 → {'✔️' if is_last_month else '✖️'}")
+            print(f"  本周还有工作日 → {'✔️' if has_next_week else '✖️'}")
+            print(f"  本月还有工作日 → {'✔️' if has_next_month else '✖️'}\n")
         except Exception as e:
             print(f"错误：{e}\n")
